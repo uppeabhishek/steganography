@@ -140,7 +140,7 @@ def main():
         image_path = input("Enter Relative Path for Image: \n")
         if path.isfile(image_path):
             if not image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
-                print("Not a image")
+                print("Not a valid image. Only .png,.jpg,.jpeg formats are accepted.\n")
                 exit()
 
             if steganography_type == 1:
