@@ -1,1 +1,2 @@
 Pillow==7.2.0
+pycrypto==2.6.1

@@ -1,15 +1,27 @@
 from os import path
 
+from Crypto.Cipher import AES
 from PIL import Image
+from math import ceil
+
+extra_char = '#'
 
 
-def encode(img_path, msg):
+def encode(img_path, msg, key):
     try:
+        obj = AES.new(key)
+
+        le = len(msg)
+
+        msg = msg.ljust(ceil(le / 16) * 16, extra_char)
+
+        ciphertext = obj.encrypt(msg)
+
         img = Image.open(img_path)
 
         new_image = Image.new(img.mode, img.size)
 
-        msg_len = len(msg)
+        msg_len = len(ciphertext)
 
         if msg_len > img.size[0] * img.size[1]:
             raise ValueError(
@@ -19,8 +31,8 @@ def encode(img_path, msg):
         msg_char_index = 0
         msg_byte_index = 0
 
-        for c in msg:
-            li.append(bin(ord(c))[2:].zfill(8))
+        for c in ciphertext:
+            li.append(bin(c)[2:].zfill(8))
 
         pixels = img.load()
 
@@ -86,7 +98,7 @@ def encode(img_path, msg):
         raise ValueError
 
 
-def decode(img_path):
+def decode(img_path, key):
     try:
         img = Image.open(img_path)
 
@@ -136,6 +148,8 @@ def main():
     print("Welcome to steganography.")
     steganography_type = int(input("1. Encode\n2. Decode\n3. Exit\n"))
 
+    key_len = 32
+
     if steganography_type == 1 or steganography_type == 2:
         image_path = input("Enter Relative Path for Image: \n")
         if path.isfile(image_path):
@@ -144,10 +158,35 @@ def main():
                 exit()
 
             if steganography_type == 1:
-                msg = input("Enter Message to encode: \n")
-                encode(image_path, msg)
+                key = input(
+                    "Please Enter Secret Key to encode text(Maximum 32 characters long and don't add # in the key): \n")
+
+                if len(key) > key_len:
+                    print("Entered Key Length is greater than 32 characters")
+                    exit()
+
+                if '#' in key:
+                    print("Key shouldn't contain # character")
+                    exit()
+                key = key.ljust(key_len, extra_char)
+
+                msg = input("Enter Message to encode(Dont add # in the msg): \n")
+
+                if '#' in msg:
+                    print("Entered Message shouldn't contain # character")
+                    exit()
+
+                encode(image_path, msg, key)
             else:
-                decode(image_path)
+                key = input("Please Enter Secret Key to decode text(Maximum 32 characters long): \n")
+                if len(key) > key_len:
+                    print("Entered Key Length is greater than 32 characters")
+                    exit()
+                if '#' in key:
+                    print("Key shouldn't contain # character")
+                    exit()
+                key = key.ljust(key_len, extra_char)
+                decode(image_path, key)
         else:
             print("Invalid File Path")
     else:
