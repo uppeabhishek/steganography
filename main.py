@@ -1,8 +1,8 @@
+from math import ceil
 from os import path
 
 from Crypto.Cipher import AES
 from PIL import Image
-from math import ceil
 
 extra_char = '#'
 
@@ -21,6 +21,8 @@ def encode(img_path, msg, key):
 
         new_image = Image.new(img.mode, img.size)
 
+        ciphertext = ciphertext.hex()
+
         msg_len = len(ciphertext)
 
         if msg_len > img.size[0] * img.size[1]:
@@ -32,7 +34,7 @@ def encode(img_path, msg, key):
         msg_byte_index = 0
 
         for c in ciphertext:
-            li.append(bin(c)[2:].zfill(8))
+            li.append(bin(ord(c))[2:].zfill(8))
 
         pixels = img.load()
 
@@ -138,7 +140,14 @@ def decode(img_path, key):
         for ele in res:
             result += chr(int(ele, 2))
 
-        print(f"Decoded String is : {result}")
+        obj = AES.new(key)
+
+        try:
+            result = obj.decrypt(bytes.fromhex(result)).decode("utf-8")
+            special_char_index = result.find("#")
+            print(f"Decoded String is : {result[0:special_char_index]}")
+        except ValueError:
+            print("Entered Key is incorrect")
 
     except ValueError:
         raise ValueError
